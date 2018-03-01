@@ -1,4 +1,5 @@
 require('./index.html');
+require('./style/stylesheet.css');
 const $ = require("jquery");
 
 const boards = 20;
@@ -35,15 +36,15 @@ function GenerateBoard() {
     let a = 0;
     let b = 0;
 
-    for(a = 0; a <= 4; a++){
+    for(a = 0; a < 4; a++){
         let row = document.createElement('div');
         row.setAttribute('type', 'div');
         row.setAttribute('id', "boggle_row_" + a);
         row.setAttribute('class',"section group");
         var button_grid = $("#button_grid");
-        button_grid.appendChild(row);
-        for(b = 0; b <= 4; b++){
-            $('#boggle_row_' + b).appendChild(buttons[a][b]);
+        button_grid.append(row);
+        for(b = 0; b < 4; b++){
+            $('#boggle_row_' + b).append(buttons[a][b]);
         }
     }
 }
@@ -57,21 +58,34 @@ function GenerateButtons() {
     let a = 0;
     let b = 0;
 
-    for(a = 0; a <=4; a++) {
+    for(a = 0; a < 4; a++) {
         let row = [];
-        for(b = 0; b <=4; b++){
+        for(b = 0; b < 4; b++){
             let diceNumber = Math.floor((Math.random() * 6) + 0);
             let btn = document.createElement('button');
             btn.setAttribute('type', 'button');
-            btn.setAttribute('text', ('test'));
             btn.setAttribute('onclick', "DiceClicked()");
             btn.setAttribute('id', "boggle_button_" + count);
             btn.setAttribute('class',"col span_1_of_4 dice");
+            btn.innerHTML= 'test';
             row.push(btn);
             count++;
+
+            let test = new Array<die>();
         }
         buttons.push(row);
     }
     GenerateBoard();
 }
 
+class die{
+    currentLetter: string;
+    letters: string[];
+    id: number;
+
+
+    constructor(letters: string[],id: number){
+        this.letters = letters;
+        this.id = id;
+    }
+}

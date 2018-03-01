@@ -1,0 +1,92 @@
+* {
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}
+
+body{
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-left: 0px;
+    margin-bottom: 0px;
+    height: 100%;
+}
+
+html{
+    height: 100%;
+}
+
+.main_container{
+    background-color: cornflowerblue;
+    min-width: 200px;
+    min-height: 100%;
+    margin: auto;
+}
+
+div.boggle_header{
+    margin: auto;
+    min-height: 50px;
+    color: white;
+    position: relative;
+}
+
+div.boggle_header p {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    transform: translate(0, -50%);
+    font-size: 2em;
+}
+
+div.game_info{
+
+}
+
+#button_grid{
+    max-width: 600px;
+    margin: auto;
+}
+
+/*  SECTIONS  */
+.section {
+    clear: both;
+    padding: 0px;
+    margin: 0px;
+}
+
+/*  COLUMN SETUP  */
+.col {
+    display: block;
+    float:left;
+    margin: 1% 0 1% 1.6%;
+}
+.col:first-child { margin-left: 0; }
+
+/*  GROUPING  */
+.group:before,
+.group:after { content:""; display:table; }
+.group:after { clear:both;}
+.group { zoom:1; /* For IE 6/7 */ }
+/*  GRID OF FOUR  */
+.span_4_of_4 {
+    width: 100%;
+}
+.span_3_of_4 {
+    width: 74.6%;
+}
+.span_2_of_4 {
+    width: 49.2%;
+}
+.span_1_of_4 {
+    width: 23.8%;
+}
+
+/*  GO FULL WIDTH BELOW 480 PIXELS */
+@media only screen and (max-width: 240px) {
+    .col {  margin: 1% 0 1% 0%; }
+    .span_1_of_4, .span_2_of_4, .span_3_of_4, .span_4_of_4 { width: 100%; }
+}
+
+div.section div{
+    background-color: lightblue;
+    min-height: 35px;
+}
