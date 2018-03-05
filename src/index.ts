@@ -1,6 +1,9 @@
+import { setInterval } from "timers";
+
 require('./index.html');
 require('./style/stylesheet.css');
 const $ = require("jquery");
+
 
 const diceLetters = [
     ['R', 'I', 'F', 'O', 'B', 'X'],
@@ -21,22 +24,68 @@ const diceLetters = [
     ['P', 'A', 'C', 'E', 'M', 'D']
 ];
 
-declare var board;
+var board;
+var maxRounds;
+var currentRound;
+var points;
+var round;
+var timer;
+var selectedDice;
 
-$( document ).ready(function() {
+$( document ).ready(function() 
+{
     StartGame();
-
+    $('.dice').click(function(e){
+        dieSelected(e.traget);
+    });
 });
 
-function StartGame(){
+function StartGame()
+{
     board = new Board;
+    timer = 180;
+    maxRounds = 20;
+    round = 1;
+    createTimer();
 }
 
-$('#button').click(function () {
+function NextRound()
+{
+    timer = 180;
+    document.getElementById('timer').value = timer; 
+    if(round == maxRounds){
+        round = 0;
+    }
+
     board.GenerateBoard();
-});
+    round++;
+}
 
+function createTimer(){
+    let timerDiv = document.createElement('progress');
+    timerDiv.setAttribute('type', 'progrss');
+    timerDiv.setAttribute('id', "timer");
+    timerDiv.setAttribute('max','180');
+    $(".game_info").append(timerDiv);
 
+    setInterval(function(){ 
+        timer--;
+         document.getElementById('timer').value = timer; 
+         if(timer <= 0){
+            NextRound();
+        }
+    }, 1000);
+}
+
+function dieSelected(die){
+    CheckInput(die.id);
+}
+
+function CheckInput(id){
+    for(let a = 0; a < selectedDice.length; a++){
+        selectedDice.
+    }
+}
 
 class Board{
     rows: HTMLDivElement[];
@@ -60,6 +109,8 @@ class Board{
     }
 
     GenerateBoard(){
+        console.log("Genrateboard");
+        this.dice = new Array<Array<Die>>();
         let count = 0; 
 
         $('.dice').remove();
@@ -69,6 +120,7 @@ class Board{
             let row = [];
             for(let b = 0; b < 4; b++){
                 let die = new Die(count);
+                die.GetRandomLetter();
                 row.push(die);
                 count++;  
             }
@@ -89,6 +141,7 @@ class Die{
     currentLetter: string;
     letters: string[];
     id: number;
+    selected: boolean;
     buttonElement: HTMLButtonElement;
 
     constructor(id: number){
@@ -98,11 +151,11 @@ class Die{
         this.buttonElement.setAttribute('id', id.toString());
         this.buttonElement.setAttribute('type', 'button');
         this.buttonElement.setAttribute('class',"col span_1_of_4 dice");
-        this.GetRandomLetter();
     }
 
     GetRandomLetter() {
         var letter = this.letters[Math.floor((Math.random() * 6) + 0)];
         this.buttonElement.innerHTML = letter;
+        console.log("Randomletter:" + letter + this.id);
     }
 }
