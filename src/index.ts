@@ -82,6 +82,8 @@ function dieSelected(die){
 }
 
 function CheckInput(id){
+    if(board.dice)
+
     for(let a = 0; a < selectedDice.length; a++){
         selectedDice.
     }
