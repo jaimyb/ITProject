@@ -31,12 +31,16 @@ var points;
 var round;
 var timer;
 var selectedDice;
+var test;
 
 $( document ).ready(function() 
 {
     StartGame();
     $('.dice').click(function(e){
-        dieSelected(e.traget);
+        CheckInput(e.target.id);
+    });
+    $('#checkWordButton').click(function(e){
+        CheckWord();
     });
 });
 
@@ -46,56 +50,138 @@ function StartGame()
     timer = 180;
     maxRounds = 20;
     round = 1;
+    selectedDice = new Array<Die>();
+    points = 0;
     createTimer();
+    createCheckButton();
 }
 
 function NextRound()
 {
     timer = 180;
-    document.getElementById('timer').value = timer; 
+    document.getElementById('timer').setAttribute('value',timer); 
     if(round == maxRounds){
         round = 0;
     }
-
     board.GenerateBoard();
     round++;
 }
 
+function CheckWord(){
+    if(selectedDice.length < 3){
+        alert("Please select a word that is longer then 2 characters!");
+    }
+    if(selectedDice.length >= 8){
+        points = points + Number(11)
+    }
+    else{
+        switch(selectedDice.length){
+            case 3:
+                points++;
+            break;
+            case 4:
+                points++;
+                console.log(points);
+            break;
+            case 5:
+                points = points + Number(2);
+            break;
+            case 6:
+                points = points + Number(3)
+            break;
+            case 7:
+                points = points + Number(5)
+            break;
+            default:
+            alert("Please select a word that is longer then 2 characters!");
+            break;
+        }
+    }
+    console.log(points);
+    document.getElementById("points").innerHTML = points;
+}
+
+function createCheckButton(){
+    let button = document.createElement('button');
+    button.setAttribute('type', 'button');
+    button.setAttribute('id', "checkWordButton");
+    button.innerHTML = "Check Word"
+    $(".game_info").append(button);
+
+    let pointsDiv = document.createElement('div');
+    pointsDiv.setAttribute('type', 'div');
+    pointsDiv.setAttribute('id', "points");
+    pointsDiv.innerHTML = points;
+    $(".game_info").append(pointsDiv);
+}
+
 function createTimer(){
     let timerDiv = document.createElement('progress');
-    timerDiv.setAttribute('type', 'progrss');
+    timerDiv.setAttribute('type', 'progress');
     timerDiv.setAttribute('id', "timer");
     timerDiv.setAttribute('max','180');
     $(".game_info").append(timerDiv);
 
     setInterval(function(){ 
         timer--;
-         document.getElementById('timer').value = timer; 
+         document.getElementById('timer').setAttribute('value',timer);
          if(timer <= 0){
             NextRound();
         }
     }, 1000);
 }
 
-function dieSelected(die){
-    CheckInput(die.id);
-}
-
 function CheckInput(id){
-    if(board.dice)
-
-    for(let a = 0; a < selectedDice.length; a++){
-        selectedDice.
+    if(selectedDice.length == 0)
+    {
+        selectedDice.push(board.dice[id]);
+         $('#' + id).css("background-color","green");
+        return true;
+    }
+    if(selectedDice.indexOf(board.dice[id]) < 0){
+        let lowestRow = board.dice[id].row - 1;
+        let highestRow = board.dice[id].row + 2;
+        if(board.dice[id].row == 0){
+            lowestRow = board.dice[id].row;
+        }
+        if(board.dice[id].row == 3){
+            highestRow = board.dice[id].row + 1;
+        }     
+        for(lowestRow; lowestRow < highestRow; lowestRow++){
+            let lowestColumn = board.dice[id].column - 1;
+            let highestColumn = board.dice[id].column + 2;
+            if(board.dice[id].column == 0){
+                lowestColumn = board.dice[id].column;
+            }
+            if(board.dice[id].column == 3){
+                highestColumn = board.dice[id].column + 1;
+            }
+            console.log(lowestRow + ',' +lowestColumn);
+            for(lowestColumn; lowestColumn < highestColumn; lowestColumn++){
+                if(board.board[lowestRow][lowestColumn] == selectedDice[selectedDice.length - 1]){
+                    selectedDice.push(board.dice[id]);
+                    $('#' + id).css("background-color","green");
+                    return true;            
+                }
+            }
+        }
+        alert("Please select the letters in sequence!");
+        return false;
+    }
+    if(id == selectedDice[selectedDice.length - 1].id){
+        selectedDice.pop();
+        $('#' + id).css("background-color","white");
     }
 }
 
 class Board{
     rows: HTMLDivElement[];
-    dice: Array<Array<Die>>;
+    board: Array<Array<Die>>;
+    dice: Array<Die>;
 
     constructor(){
         this.rows = new Array<HTMLDivElement>();
-        this.dice = new Array<Array<Die>>();
+        this.board = new Array<Array<Die>>();
         this.InitRows();
         this.GenerateBoard();
     }
@@ -112,7 +198,8 @@ class Board{
 
     GenerateBoard(){
         console.log("Genrateboard");
-        this.dice = new Array<Array<Die>>();
+        this.board = new Array<Array<Die>>();
+        this.dice = new Array<Die>();
         let count = 0; 
 
         $('.dice').remove();
@@ -124,15 +211,18 @@ class Board{
                 let die = new Die(count);
                 die.GetRandomLetter();
                 row.push(die);
+                die.row = a;
+                die.column = b;
+                this.dice.push(die);
                 count++;  
             }
-            this.dice.push(row);
+            this.board.push(row);
         }
 
         for(let a = 0; a < 4; a++) {
             $("#button_grid").append(this.rows[a]);
             for(let b = 0; b < 4; b++){
-                $('#boggle_row_' + a).append(this.dice[a][b].buttonElement);
+                $('#boggle_row_' + a).append(this.board[a][b].buttonElement);
             }
         }
     }
@@ -143,6 +233,8 @@ class Die{
     currentLetter: string;
     letters: string[];
     id: number;
+    row: number;
+    column: number;
     selected: boolean;
     buttonElement: HTMLButtonElement;
 
