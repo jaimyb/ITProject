@@ -15,8 +15,20 @@ html{
     height: 100%;
 }
 
+button{
+    background-color: grey;
+    min-height: 50px;
+}
+div{
+    color: white;
+}
+
+.selected{
+    background-color: green;
+}
+
 .main_container{
-    background-color: cornflowerblue;
+    background-color: #283e65;
     min-width: 200px;
     min-height: 100%;
     margin: auto;
@@ -37,8 +49,8 @@ div.boggle_header p {
     font-size: 2em;
 }
 
-div.game_info{
-
+.game_info button{
+    min-height: 0;
 }
 
 #button_grid{

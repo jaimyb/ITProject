@@ -4,7 +4,6 @@ require('./index.html');
 require('./style/stylesheet.css');
 const $ = require("jquery");
 
-
 const diceLetters = [
     ['R', 'I', 'F', 'O', 'B', 'X'],
     ['I', 'F', 'E', 'H', 'E', 'Y'],
@@ -24,98 +23,45 @@ const diceLetters = [
     ['P', 'A', 'C', 'E', 'M', 'D']
 ];
 
-var board;
-var maxRounds;
-var currentRound;
-var points;
-var round;
-var timer;
-var selectedDice;
-var test;
+let game;
 
-$( document ).ready(function() 
+$(document).ready(function() 
 {
-    StartGame();
+    console.log("ready");
+    game = new Game(20);
     $('.dice').click(function(e){
-        CheckInput(e.target.id);
+        game.CheckInput(e.target.id);
     });
     $('#checkWordButton').click(function(e){
-        CheckWord();
+        game.CheckWord();
     });
 });
 
-function StartGame()
-{
-    board = new Board;
-    timer = 180;
-    maxRounds = 20;
-    round = 1;
-    selectedDice = new Array<Die>();
-    points = 0;
-    createTimer();
-    createCheckButton();
-}
-
-function NextRound()
-{
-    timer = 180;
-    document.getElementById('timer').setAttribute('value',timer); 
-    if(round == maxRounds){
-        round = 0;
-    }
-    board.GenerateBoard();
-    round++;
-}
-
-function CheckWord(){
-    if(selectedDice.length < 3){
-        alert("Please select a word that is longer then 2 characters!");
-    }
-    if(selectedDice.length >= 8){
-        points = points + Number(11)
-    }
-    else{
-        switch(selectedDice.length){
-            case 3:
-                points++;
-            break;
-            case 4:
-                points++;
-                console.log(points);
-            break;
-            case 5:
-                points = points + Number(2);
-            break;
-            case 6:
-                points = points + Number(3)
-            break;
-            case 7:
-                points = points + Number(5)
-            break;
-            default:
-            alert("Please select a word that is longer then 2 characters!");
-            break;
-        }
-    }
-    console.log(points);
-    document.getElementById("points").innerHTML = points;
-}
-
-function createCheckButton(){
+function generateCheckWordElement(){
     let button = document.createElement('button');
     button.setAttribute('type', 'button');
     button.setAttribute('id', "checkWordButton");
     button.innerHTML = "Check Word"
     $(".game_info").append(button);
+}
 
+function generatePointsElement(){
     let pointsDiv = document.createElement('div');
     pointsDiv.setAttribute('type', 'div');
     pointsDiv.setAttribute('id', "points");
-    pointsDiv.innerHTML = points;
+    pointsDiv.innerHTML = 'Points: 0';
     $(".game_info").append(pointsDiv);
 }
 
-function createTimer(){
+function generateRoundElement(){
+    let round = document.createElement('div');
+    round.setAttribute('type', 'div');
+    round.setAttribute('id', "round");
+    round.innerHTML = 'Round: 0';
+    $(".game_info").append(round);
+}
+
+function generateTimerElement(){
     let timerDiv = document.createElement('progress');
     timerDiv.setAttribute('type', 'progress');
     timerDiv.setAttribute('id', "timer");
@@ -123,54 +69,126 @@ function createTimer(){
     $(".game_info").append(timerDiv);
 
     setInterval(function(){ 
-        timer--;
-         document.getElementById('timer').setAttribute('value',timer);
-         if(timer <= 0){
-            NextRound();
+        game.timer--;
+         document.getElementById('timer').setAttribute('value',game.timer);
+         if(game.timer <= 0){
+            game.NextRound();
+            game.timer = 180;
         }
     }, 1000);
 }
 
-function CheckInput(id){
-    if(selectedDice.length == 0)
-    {
-        selectedDice.push(board.dice[id]);
-         $('#' + id).css("background-color","green");
-        return true;
+
+class Game{
+    round: number;
+    maxRounds: number;
+    board: Board;
+    points: number;
+    selectedDice: Array<Die>;
+    timer: number;
+
+    constructor(maxRounds: number){
+        this.maxRounds = maxRounds;
+        this.round = 0;
+        this.points = 0;
+        this.timer = 180;
+        this.selectedDice = new Array<Die>();
+        this.board = new Board();
+        this.StartGame();
     }
-    if(selectedDice.indexOf(board.dice[id]) < 0){
-        let lowestRow = board.dice[id].row - 1;
-        let highestRow = board.dice[id].row + 2;
-        if(board.dice[id].row == 0){
-            lowestRow = board.dice[id].row;
+
+    StartGame(){
+        generateRoundElement();
+        generatePointsElement();
+        generateTimerElement();
+        generateCheckWordElement();    
+    }
+
+    CheckWord(){
+        if(this.selectedDice.length >= 8){
+            this.points = this.points + Number(11)
         }
-        if(board.dice[id].row == 3){
-            highestRow = board.dice[id].row + 1;
-        }     
-        for(lowestRow; lowestRow < highestRow; lowestRow++){
-            let lowestColumn = board.dice[id].column - 1;
-            let highestColumn = board.dice[id].column + 2;
-            if(board.dice[id].column == 0){
-                lowestColumn = board.dice[id].column;
+        else{
+            switch(this.selectedDice.length){
+                case 3:
+                    this.points++;
+                break;
+                case 4:
+                    this.points++;
+                break;
+                case 5:
+                    this.points = this.points + Number(2);
+                break;
+                case 6:
+                    this.points = this.points + Number(3)
+                break;
+                case 7:
+                    this.points = this.points + Number(5)
+                break;
+                default:
+                alert("Please select a word that is longer then 2 characters!");
+                break;
+            }   
+        }
+        document.getElementById("points").innerHTML = "Points: " + this.points.toString();
+        this.selectedDice = [];
+        $('.dice').removeClass('selected');
+    }
+
+    CheckInput(id){
+        if(this.selectedDice.length == 0)
+        {
+            this.selectedDice.push(this.board.dice[id]);
+             $('#' + id).addClass('selected');
+            return true;
+        }
+        if(this.selectedDice.indexOf(this.board.dice[id]) < 0){
+            let lowestRow = this.board.dice[id].row - 1;
+            let highestRow = this.board.dice[id].row + 2;
+            if(this.board.dice[id].row == 0){
+                lowestRow = this.board.dice[id].row;
             }
-            if(board.dice[id].column == 3){
-                highestColumn = board.dice[id].column + 1;
-            }
-            console.log(lowestRow + ',' +lowestColumn);
-            for(lowestColumn; lowestColumn < highestColumn; lowestColumn++){
-                if(board.board[lowestRow][lowestColumn] == selectedDice[selectedDice.length - 1]){
-                    selectedDice.push(board.dice[id]);
-                    $('#' + id).css("background-color","green");
-                    return true;            
+            if(this.board.dice[id].row == 3){
+                highestRow = this.board.dice[id].row + 1;
+            }     
+            for(lowestRow; lowestRow < highestRow; lowestRow++){
+                let lowestColumn = this.board.dice[id].column - 1;
+                let highestColumn = this.board.dice[id].column + 2;
+                if(this.board.dice[id].column == 0){
+                    lowestColumn = this.board.dice[id].column;
+                }
+                if(this.board.dice[id].column == 3){
+                    highestColumn = this.board.dice[id].column + 1;
+                }
+                console.log(lowestRow + ',' +lowestColumn);
+                for(lowestColumn; lowestColumn < highestColumn; lowestColumn++){
+                    if(this.board.board[lowestRow][lowestColumn] == this.selectedDice[this.selectedDice.length - 1]){
+                        this.selectedDice.push(this.board.dice[id]);
+                        $('#' + id).addClass('selected');
+                        return true;            
+                    }
                 }
             }
+            alert("Please select the letters in sequence!");
+            return false;
         }
-        alert("Please select the letters in sequence!");
-        return false;
+        if(id == this.selectedDice[this.selectedDice.length - 1].id){
+            this.selectedDice.pop();
+            $('#' + id).removeClass('selected');
+        }
     }
-    if(id == selectedDice[selectedDice.length - 1].id){
-        selectedDice.pop();
-        $('#' + id).css("background-color","white");
+
+    NextRound(){
+        this.timer = 5;
+        document.getElementById('timer').setAttribute('value',this.timer.toString()); 
+        if(this.round == this.maxRounds){
+            this.round = 0;
+            this.points = 0;
+            alert("The game has ended! Your score: " + this.points.toString())
+        }
+        this.board.GenerateBoard();
+        this.round++;
+        document.getElementById('round').innerHTML = "Round: " + this.round.toString(); 
     }
 }
 
