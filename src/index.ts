@@ -35,6 +35,23 @@ $(document).ready(function()
     $('#checkWordButton').click(function(e){
         game.CheckWord();
     });
+    $('#getJSON').click(function(e){
+        // let request = new XMLHttpRequest();
+        // request.open('GET', 'http://localhost:60483/api/todo/', true);
+        // request.onload = function () {
+        // console.log(this.response);
+        // JSON.parse(this.response);
+        // }      
+        // request.send();
+        $.ajax({
+            url: 'http://localhost:60483/api/todo',
+            type: 'GET',
+            dataType: 'jsonp',            
+            success: function (data) {              
+                console.log(data.Name);
+            },
+        });           
+    });
 });
 
 function generateCheckWordElement(){
