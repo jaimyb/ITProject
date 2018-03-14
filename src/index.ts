@@ -44,11 +44,11 @@ $(document).ready(function()
         // }      
         // request.send();
         $.ajax({
-            url: 'http://localhost:60483/api/todo',
+            url: 'http://localhost:49885/api/board',
             type: 'GET',
-            dataType: 'jsonp',            
+            dataType: 'json',            
             success: function (data) {              
-                console.log(data.Name);
+                console.log(data);
             },
         });           
     });
