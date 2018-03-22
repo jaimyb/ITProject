@@ -1,4 +1,5 @@
 import { setInterval } from "timers";
+var moment = require('moment');
 
 require('./index.html');
 require('./style/stylesheet.css');
@@ -28,31 +29,46 @@ let game;
 $(document).ready(function() 
 {
     console.log("ready");
-    game = new Game(20);
-    $('.dice').click(function(e){
-        game.CheckInput(e.target.id);
-    });
-    $('#checkWordButton').click(function(e){
-        game.CheckWord();
-    });
-    $('#getJSON').click(function(e){
-        // let request = new XMLHttpRequest();
-        // request.open('GET', 'http://localhost:60483/api/todo/', true);
-        // request.onload = function () {
-        // console.log(this.response);
-        // JSON.parse(this.response);
-        // }      
-        // request.send();
-        $.ajax({
-            url: 'http://localhost:49885/api/board',
-            type: 'GET',
-            dataType: 'json',            
-            success: function (data) {              
-                console.log(data);
-            },
-        });           
-    });
+    generateHomePage();    
 });
+
+function generateHomePage(){
+    generateStartGameButton();
+    generatePlayerNameInput();
+}
+
+function generateStartGameButton(){
+    let startgameButton = document.createElement('button');
+    startgameButton.setAttribute('type', 'button');
+    startgameButton.setAttribute('id', "start_game");
+    startgameButton.innerHTML = 'Start Game';
+    $(".game_info").append(startgameButton);
+
+    $('#start_game').click(function(e){
+        var playerName = $("#player_name_input").val();
+        game = new Game(playerName as string);
+        $("#player_name_input").remove();
+        $("#player_name").remove();
+        $("#start_game").remove();
+    });
+}
+
+function generatePlayerNameInput(){
+    let playerName = document.createElement('div');
+    playerName.setAttribute('type', 'div');
+    playerName.setAttribute('id', "player_name");
+    playerName.style.display = "inline-block"
+    playerName.innerHTML = "Player:";
+    $(".game_info").append(playerName);
+
+
+    let playerNameInput = document.createElement('input');
+    playerNameInput.setAttribute('type', 'input');
+    playerNameInput.setAttribute('id', "player_name_input");
+    playerNameInput.style.minWidth = "50px"
+    $(".game_info").append(playerNameInput);
+}
+
 
 function generateCheckWordElement(){
     let button = document.createElement('button');
@@ -60,6 +76,11 @@ function generateCheckWordElement(){
     button.setAttribute('id', "checkWordButton");
     button.innerHTML = "Check Word"
     $(".game_info").append(button);
+    
+    $('#checkWordButton').click(function(e){
+        console.log("checkword click");
+        game.CheckWord();
+    });
 }
 
 function generatePointsElement(){
@@ -68,14 +89,6 @@ function generatePointsElement(){
     pointsDiv.setAttribute('id', "points");
     pointsDiv.innerHTML = 'Points: 0';
     $(".game_info").append(pointsDiv);
-}
-
-function generateRoundElement(){
-    let round = document.createElement('div');
-    round.setAttribute('type', 'div');
-    round.setAttribute('id', "round");
-    round.innerHTML = 'Round: 0';
-    $(".game_info").append(round);
 }
 
 function generateTimerElement(){
@@ -88,37 +101,33 @@ function generateTimerElement(){
     setInterval(function(){ 
         game.timer--;
          document.getElementById('timer').setAttribute('value',game.timer);
-         if(game.timer <= 0){
-            game.NextRound();
-            game.timer = 180;
+         if(game.timer == 0){
+            game.EndGame();
         }
     }, 1000);
 }
 
 
 class Game{
-    round: number;
-    maxRounds: number;
     board: Board;
     points: number;
     selectedDice: Array<Die>;
     timer: number;
+    player: string;
 
-    constructor(maxRounds: number){
-        this.maxRounds = maxRounds;
-        this.round = 0;
+    constructor(playerName: string){
         this.points = 0;
-        this.timer = 180;
+        this.timer = 5;
+        this.player = playerName;
         this.selectedDice = new Array<Die>();
-        this.board = new Board();
         this.StartGame();
     }
 
     StartGame(){
-        generateRoundElement();
         generatePointsElement();
         generateTimerElement();
-        generateCheckWordElement();    
+        generateCheckWordElement();
+        this.board = new Board();    
     }
 
     CheckWord(){
@@ -177,7 +186,6 @@ class Game{
                 if(this.board.dice[id].column == 3){
                     highestColumn = this.board.dice[id].column + 1;
                 }
-                console.log(lowestRow + ',' +lowestColumn);
                 for(lowestColumn; lowestColumn < highestColumn; lowestColumn++){
                     if(this.board.board[lowestRow][lowestColumn] == this.selectedDice[this.selectedDice.length - 1]){
                         this.selectedDice.push(this.board.dice[id]);
@@ -195,17 +203,48 @@ class Game{
         }
     }
 
-    NextRound(){
-        this.timer = 5;
+    EndGame(){
         document.getElementById('timer').setAttribute('value',this.timer.toString()); 
-        if(this.round == this.maxRounds){
-            this.round = 0;
-            this.points = 0;
-            alert("The game has ended! Your score: " + this.points.toString())
+        alert("The game has ended! Your score: " + this.points.toString());
+        this.saveBoard();        
+        this.RemoveGameUi();
+        generateHomePage();
+    }
+
+    saveBoard(){
+        let Board = {Player: this.player, Date: moment().format('L'), Dies: [], Score: this.points};
+    
+        for(let a = 0; a < this.board.dice.length; a++){
+            var die = {Letter: this.board.dice[a].currentLetter};
+            Board.Dies.push(die);
         }
-        this.board.GenerateBoard();
-        this.round++;
-        document.getElementById('round').innerHTML = "Round: " + this.round.toString(); 
+        
+        console.log("Board posted to server:")
+        console.log(Board);
+    
+        $.ajax({
+            type: 'POST',
+            async: true,
+            url: 'http://localhost:49885/api/boards',
+            contentType: 'application/json; charset=UTF-8',  //send type of data to sever
+            dataType: 'text', //retrun type of data from server
+            data: JSON.stringify(Board),
+            success: function (response, statusText, xhr) {
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {                       
+                alert(XMLHttpRequest.responseText);
+    
+            }
+        });
+    }
+
+    RemoveGameUi()
+    {
+        $('#timer').remove();
+        $('.dice').remove();
+        $('#points').remove();
+        $('.boggle_row').remove();
+        $('#checkWordButton').remove();
     }
 }
 
@@ -232,7 +271,6 @@ class Board{
     }
 
     GenerateBoard(){
-        console.log("Genrateboard");
         this.board = new Array<Array<Die>>();
         this.dice = new Array<Die>();
         let count = 0; 
@@ -240,11 +278,19 @@ class Board{
         $('.dice').remove();
         $('.boggle_row').remove();
 
+        var arr = []
+        while(arr.length < 16){
+            var randomnumber = Math.floor(Math.random()*16);
+            if(arr.indexOf(randomnumber) > -1) continue;
+            console.log(randomnumber);
+            arr[arr.length] = randomnumber;
+        }
+
         for(let a = 0; a < 4; a++) {
             let row = [];
             for(let b = 0; b < 4; b++){
                 let die = new Die(count);
-                die.GetRandomLetter();
+                die.GetRandomLetter(arr[count]);
                 row.push(die);
                 die.row = a;
                 die.column = b;
@@ -260,6 +306,12 @@ class Board{
                 $('#boggle_row_' + a).append(this.board[a][b].buttonElement);
             }
         }
+
+        $('.dice').click(function(e){
+            console.log("dice click");
+            game.CheckInput(e.target.id);
+        });
+        
     }
     
 }
@@ -282,9 +334,9 @@ class Die{
         this.buttonElement.setAttribute('class',"col span_1_of_4 dice");
     }
 
-    GetRandomLetter() {
+    GetRandomLetter(seed: Number) {
         var letter = this.letters[Math.floor((Math.random() * 6) + 0)];
         this.buttonElement.innerHTML = letter;
-        console.log("Randomletter:" + letter + this.id);
+        this.currentLetter = letter;
     }
 }

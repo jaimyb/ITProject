@@ -55,7 +55,20 @@ div.boggle_header p {
 
 #button_grid{
     max-width: 600px;
+    padding: 10px;
     margin: auto;
+}
+
+.leaderboard_item{
+    align-items: center !important;
+    justify-content: right !important;
+    display: flex !important;
+}
+
+.leaderboard_row{
+    border-bottom: solid;
+    border-top: solid;
+    border-width: 1px;
 }
 
 /*  SECTIONS  */
@@ -99,6 +112,5 @@ div.boggle_header p {
 }
 
 div.section div{
-    background-color: lightblue;
     min-height: 35px;
 }
