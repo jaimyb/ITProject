@@ -1,6 +1,12 @@
 * {
     box-sizing: border-box;
     font-family: 'Roboto', sans-serif;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-font-smoothing: antialiased;
+    -o-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
 body{
@@ -15,12 +21,38 @@ html{
     height: 100%;
 }
 
-button{
-    background-color: grey;
-    min-height: 50px;
-}
+
 div{
     color: white;
+}
+
+button{
+    background-color: #e7e7e7; /* Green */
+    border: none;
+    color: black;
+    padding: 7px 16px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    min-height: 50px;
+}
+
+input{
+    border: 1px solid #ccc;
+    background: #FFF;
+    margin-left: 5px;
+    margin-right: 5px;
+    padding: 10px;
+    font-size: 20px;
+    flex: 2;
+}
+
+progress{
+    width: 100%;
+    background-color: white;
+    color: #283e65; 
 }
 
 .selected{
@@ -37,8 +69,12 @@ div{
 div.boggle_header{
     margin: auto;
     min-height: 50px;
-    color: white;
-    position: relative;
+    color: #7dc2ff;
+    align-items: center !important;
+    justify-content: center !important;
+    display: flex !important;
+    font-size: 33px;
+    margin-bottom: 60px;
 }
 
 div.boggle_header p {
@@ -53,9 +89,25 @@ div.boggle_header p {
     min-height: 0;
 }
 
+.start_game_input{
+    display: flex;
+    max-width: 90%;
+    margin: auto;
+}
+
+#leaderboard_header div{
+    color: #929292;
+    border-color: white;
+}
+
 #button_grid{
     max-width: 600px;
     padding: 10px;
+    margin: auto;
+}
+
+.leaderboard{
+    max-width: 600px;
     margin: auto;
 }
 
@@ -67,7 +119,6 @@ div.boggle_header p {
 
 .leaderboard_row{
     border-bottom: solid;
-    border-top: solid;
     border-width: 1px;
 }
 

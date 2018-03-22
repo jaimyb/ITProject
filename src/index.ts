@@ -29,7 +29,9 @@ let game;
 $(document).ready(function() 
 {
     console.log("ready");
-    generateHomePage();    
+    generateHomePage();
+    startTimer();
+    
 });
 
 function generateHomePage(){
@@ -37,12 +39,14 @@ function generateHomePage(){
     generatePlayerNameInput();
 }
 
+
+
 function generateStartGameButton(){
     let startgameButton = document.createElement('button');
     startgameButton.setAttribute('type', 'button');
     startgameButton.setAttribute('id', "start_game");
     startgameButton.innerHTML = 'Start Game';
-    $(".game_info").append(startgameButton);
+    $(".start_game_input").append(startgameButton);
 
     $('#start_game').click(function(e){
         var playerName = $("#player_name_input").val();
@@ -54,19 +58,12 @@ function generateStartGameButton(){
 }
 
 function generatePlayerNameInput(){
-    let playerName = document.createElement('div');
-    playerName.setAttribute('type', 'div');
-    playerName.setAttribute('id', "player_name");
-    playerName.style.display = "inline-block"
-    playerName.innerHTML = "Player:";
-    $(".game_info").append(playerName);
-
-
     let playerNameInput = document.createElement('input');
     playerNameInput.setAttribute('type', 'input');
     playerNameInput.setAttribute('id', "player_name_input");
     playerNameInput.style.minWidth = "50px"
-    $(".game_info").append(playerNameInput);
+    playerNameInput.placeholder = "Name";
+    $(".start_game_input").append(playerNameInput);
 }
 
 
@@ -97,14 +94,20 @@ function generateTimerElement(){
     timerDiv.setAttribute('id', "timer");
     timerDiv.setAttribute('max','180');
     $(".game_info").append(timerDiv);
+}
 
-    setInterval(function(){ 
+function startTimer(){
+    
+    setInterval(function(){
+        if (game != null) {
         game.timer--;
-         document.getElementById('timer').setAttribute('value',game.timer);
-         if(game.timer == 0){
+            document.getElementById('timer').setAttribute('value',game.timer);
+            if(game.timer == 0){
             game.EndGame();
+            }
         }
     }, 1000);
+     
 }
 
 
@@ -117,7 +120,7 @@ class Game{
 
     constructor(playerName: string){
         this.points = 0;
-        this.timer = 5;
+        this.timer = 10;
         this.player = playerName;
         this.selectedDice = new Array<Die>();
         this.StartGame();
@@ -209,6 +212,7 @@ class Game{
         this.saveBoard();        
         this.RemoveGameUi();
         generateHomePage();
+        game = null;
     }
 
     saveBoard(){
@@ -334,9 +338,103 @@ class Die{
         this.buttonElement.setAttribute('class',"col span_1_of_4 dice");
     }
 
-    GetRandomLetter(seed: Number) {
-        var letter = this.letters[Math.floor((Math.random() * 6) + 0)];
+    GetRandomLetter(seed) {
+        var letter = diceLetters[seed][Math.floor((Math.random() * 6) + 0)];
         this.buttonElement.innerHTML = letter;
         this.currentLetter = letter;
+    }
+}
+
+class Leaderboard{
+
+    constructor(){
+
+        this.generateLeaderBoardHeader();
+        var request = $.ajax({
+            type: 'GET',
+            async: false,
+            url: 'http://localhost:49885/api/Leaderboard',
+            dataType: 'json',
+            success: function (data, statusText, xhr) {
+                return data;
+                
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {                       
+                alert(XMLHttpRequest.responseText);
+    
+            }
+        });
+        
+        for (let index = 0; index < request.responseJSON.length; index++) {
+            const element = request.responseJSON[index];
+            this.generateLeaderBoardItem(element.Player,element.Date,element.Score,element.Id,index.toString());
+        }
+    }
+
+
+
+    generateLeaderBoardHeader(){
+        let leaderBoardHeaderDiv = document.createElement('div');
+        leaderBoardHeaderDiv.setAttribute('type', 'div');
+        leaderBoardHeaderDiv.setAttribute('id', "leaderboard_header_row");
+        leaderBoardHeaderDiv.setAttribute('class','section group leaderboard_row');
+        $("#leaderboard_header").append(leaderBoardHeaderDiv);
+    
+        leaderBoardHeaderDiv = document.createElement('div');
+        leaderBoardHeaderDiv.setAttribute('type', 'div');
+        leaderBoardHeaderDiv.setAttribute('id', "Player");
+        leaderBoardHeaderDiv.setAttribute('class','col span_1_of_4 leaderboard_item');
+        leaderBoardHeaderDiv.innerHTML = "Player";
+        $( "#leaderboard_header_row").append(leaderBoardHeaderDiv);
+    
+        leaderBoardHeaderDiv = document.createElement('div');
+        leaderBoardHeaderDiv.setAttribute('type', 'div');
+        leaderBoardHeaderDiv.setAttribute('id', "Date");
+        leaderBoardHeaderDiv.setAttribute('class','col span_1_of_4 leaderboard_item');
+        leaderBoardHeaderDiv.innerHTML = "Date";
+        $( "#leaderboard_header_row").append(leaderBoardHeaderDiv);
+    
+        leaderBoardHeaderDiv = document.createElement('div');
+        leaderBoardHeaderDiv.setAttribute('type', 'div');
+        leaderBoardHeaderDiv.setAttribute('id', "Score");
+        leaderBoardHeaderDiv.setAttribute('class','col span_1_of_4 leaderboard_item');
+        leaderBoardHeaderDiv.innerHTML = "Score";
+        $("#leaderboard_header_row").append(leaderBoardHeaderDiv);
+    }
+    
+    generateLeaderBoardItem(player: string, Date: string, Score: Number, BoardId: string, RowId: string){
+        let leaderBoardHeaderDiv = document.createElement('div');
+        leaderBoardHeaderDiv.setAttribute('type', 'div');
+        leaderBoardHeaderDiv.setAttribute('id', "row" + RowId);
+        leaderBoardHeaderDiv.setAttribute('class','section group leaderboard_row');
+        $("#leaderboard_grid").append(leaderBoardHeaderDiv);
+    
+        leaderBoardHeaderDiv = document.createElement('div');
+        leaderBoardHeaderDiv.setAttribute('type', 'div');
+        leaderBoardHeaderDiv.setAttribute('id', "Player");
+        leaderBoardHeaderDiv.setAttribute('class','col span_1_of_4 leaderboard_item');
+        leaderBoardHeaderDiv.innerHTML = player;
+        $( "#row" + RowId.toString()).append(leaderBoardHeaderDiv);
+    
+        leaderBoardHeaderDiv = document.createElement('div');
+        leaderBoardHeaderDiv.setAttribute('type', 'div');
+        leaderBoardHeaderDiv.setAttribute('id', "Date");
+        leaderBoardHeaderDiv.setAttribute('class','col span_1_of_4 leaderboard_item');
+        leaderBoardHeaderDiv.innerHTML = Date;
+        $( "#row" + RowId.toString()).append(leaderBoardHeaderDiv);
+    
+        leaderBoardHeaderDiv = document.createElement('div');
+        leaderBoardHeaderDiv.setAttribute('type', 'div');
+        leaderBoardHeaderDiv.setAttribute('id', "Score");
+        leaderBoardHeaderDiv.setAttribute('class','col span_1_of_4 leaderboard_item');
+        leaderBoardHeaderDiv.innerHTML = Score.toString();
+        $("#row" + RowId.toString()).append(leaderBoardHeaderDiv);
+    
+        leaderBoardHeaderDiv = document.createElement('div');
+        leaderBoardHeaderDiv.setAttribute('type', 'div');
+        leaderBoardHeaderDiv.setAttribute('id', BoardId);
+        leaderBoardHeaderDiv.setAttribute('class','col span_1_of_4 leaderboard_item');
+        leaderBoardHeaderDiv.innerHTML = "Play Board";
+        $("#row" + RowId.toString()).append(leaderBoardHeaderDiv);
     }
 }
