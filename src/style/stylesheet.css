@@ -55,6 +55,11 @@ progress{
     color: #283e65; 
 }
 
+.playboard{
+    background-color: #7dc2ff;
+    min-height: 30px;
+}
+
 .selected{
     background-color: green;
 }

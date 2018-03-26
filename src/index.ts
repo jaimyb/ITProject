@@ -25,11 +25,14 @@ const diceLetters = [
 ];
 
 let game;
+let leaderboard;
 
 $(document).ready(function() 
 {
     console.log("ready");
+    //generateHomePage();
     generateHomePage();
+    leaderboard = new Leaderboard();
     startTimer();
     
 });
@@ -39,21 +42,29 @@ function generateHomePage(){
     generatePlayerNameInput();
 }
 
-
+function closeHomepage(){
+    $("#player_name_input").remove();
+    $("#player_name").remove();
+    $("#start_game").remove();
+    leaderboard.CloseLeaderboard();
+}
 
 function generateStartGameButton(){
     let startgameButton = document.createElement('button');
     startgameButton.setAttribute('type', 'button');
     startgameButton.setAttribute('id', "start_game");
-    startgameButton.innerHTML = 'Start Game';
+    startgameButton.innerHTML = 'New Game';
     $(".start_game_input").append(startgameButton);
 
     $('#start_game').click(function(e){
-        var playerName = $("#player_name_input").val();
-        game = new Game(playerName as string);
-        $("#player_name_input").remove();
-        $("#player_name").remove();
-        $("#start_game").remove();
+        if($('#player_name_input').val() != ""){
+            var playerName = $("#player_name_input").val();
+            game = new Game(playerName as string, null);
+            closeHomepage();
+        }
+        else{
+            alert("YO BOI ENTER A FUCKING NAME");
+        }
     });
 }
 
@@ -65,7 +76,6 @@ function generatePlayerNameInput(){
     playerNameInput.placeholder = "Name";
     $(".start_game_input").append(playerNameInput);
 }
-
 
 function generateCheckWordElement(){
     let button = document.createElement('button');
@@ -110,18 +120,19 @@ function startTimer(){
      
 }
 
-
 class Game{
     board: Board;
+    leaderBoardBoard;
     points: number;
     selectedDice: Array<Die>;
     timer: number;
     player: string;
 
-    constructor(playerName: string){
+    constructor(playerName: string, leaderBoardboard: object){
         this.points = 0;
-        this.timer = 10;
+        this.timer = 180;
         this.player = playerName;
+        this.leaderBoardBoard = leaderBoardboard;
         this.selectedDice = new Array<Die>();
         this.StartGame();
     }
@@ -130,7 +141,14 @@ class Game{
         generatePointsElement();
         generateTimerElement();
         generateCheckWordElement();
-        this.board = new Board();    
+        if(this.leaderBoardBoard == null){
+            this.board = new Board(null);
+            console.log("leaderboardboard = null");
+        }
+        else{
+            this.board = new Board(this.leaderBoardBoard); 
+            console.log( "Leaderboard is not null:" +this.leaderBoardBoard);
+        }   
     }
 
     CheckWord(){
@@ -213,6 +231,7 @@ class Game{
         this.RemoveGameUi();
         generateHomePage();
         game = null;
+        leaderboard = new Leaderboard();
     }
 
     saveBoard(){
@@ -256,10 +275,12 @@ class Board{
     rows: HTMLDivElement[];
     board: Array<Array<Die>>;
     dice: Array<Die>;
+    LeaderBoardBoard;
 
-    constructor(){
+    constructor(leaderboardBoard){
         this.rows = new Array<HTMLDivElement>();
         this.board = new Array<Array<Die>>();
+        this.LeaderBoardBoard = leaderboardBoard;
         this.InitRows();
         this.GenerateBoard();
     }
@@ -294,7 +315,12 @@ class Board{
             let row = [];
             for(let b = 0; b < 4; b++){
                 let die = new Die(count);
-                die.GetRandomLetter(arr[count]);
+                if(this.LeaderBoardBoard == null){
+                    die.GetRandomLetter(arr[count]);
+                }
+                else{
+                    die.SetLetter(this.LeaderBoardBoard.Dies[count].Letter);
+                }
                 row.push(die);
                 die.row = a;
                 die.column = b;
@@ -343,6 +369,11 @@ class Die{
         this.buttonElement.innerHTML = letter;
         this.currentLetter = letter;
     }
+
+    SetLetter(letter){
+        this.buttonElement.innerHTML = letter;
+        this.currentLetter = letter;
+    }
 }
 
 class Leaderboard{
@@ -370,8 +401,6 @@ class Leaderboard{
             this.generateLeaderBoardItem(element.Player,element.Date,element.Score,element.Id,index.toString());
         }
     }
-
-
 
     generateLeaderBoardHeader(){
         let leaderBoardHeaderDiv = document.createElement('div');
@@ -430,11 +459,41 @@ class Leaderboard{
         leaderBoardHeaderDiv.innerHTML = Score.toString();
         $("#row" + RowId.toString()).append(leaderBoardHeaderDiv);
     
-        leaderBoardHeaderDiv = document.createElement('div');
-        leaderBoardHeaderDiv.setAttribute('type', 'div');
-        leaderBoardHeaderDiv.setAttribute('id', BoardId);
-        leaderBoardHeaderDiv.setAttribute('class','col span_1_of_4 leaderboard_item');
-        leaderBoardHeaderDiv.innerHTML = "Play Board";
-        $("#row" + RowId.toString()).append(leaderBoardHeaderDiv);
+        let leaderBoardHeaderButton = document.createElement('button');
+        leaderBoardHeaderButton.setAttribute('type', 'button');
+        leaderBoardHeaderButton.setAttribute('id', "B" + BoardId);
+        leaderBoardHeaderButton.setAttribute('class','col span_1_of_4 playboard');
+        leaderBoardHeaderButton.innerHTML = "Play Board";
+        $("#row" + RowId.toString()).append(leaderBoardHeaderButton);
+        $("#B" + BoardId).click(function(){
+            if($('#player_name_input').val() != ""){
+                var request = $.ajax({
+                    type: 'GET',
+                    async: false,
+                    url: 'http://localhost:49885/api/Boards/' + BoardId,
+                    dataType: 'json',
+                    success: function (data, statusText, xhr) {
+                        console.log(data);
+                        return data;
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {                       
+                        alert(XMLHttpRequest.responseText);
+            
+                    }
+                });   
+                var playerName = $("#player_name_input").val(); 
+                game = new Game(playerName, request.responseJSON);
+                closeHomepage();
+            }
+            else{
+                alert("YO BOI ENTER A FUCKING NAME");
+            }
+        });
+    }
+
+    CloseLeaderboard(){
+        $('.leaderboard_item').remove();
+        $('.leaderboard_row').remove();
+        leaderboard = null;
     }
 }
